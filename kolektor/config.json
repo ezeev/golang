@@ -1,0 +1,12 @@
+{
+  "ListenPort": "10001",
+  "Backend": "wavefront",
+  "Interval": 5,
+  "BackendArgs": {
+    "proxyAddress": "192.168.99.100",
+    "proxyPort":"2878",
+    "defaultSource": "kolektor",
+    "prefix": "kolektor.",
+    "printStats": "true"
+  }
+}

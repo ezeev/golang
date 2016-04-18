@@ -1,0 +1,12 @@
+  collector: cassandra
+  interval: 10
+  host: http://localhost:8778
+  metrics:
+    - "java.lang:type=GarbageCollector,name=ConcurrentMarkSweep/CollectionTime|Java.GarbageCollector.ConcurrentMarkSweep.CollectionTime"
+    - "java.lang:type=GarbageCollector,name=ConcurrentMarkSweep/CollectionCount|Java.GarbageCollector.ConcurrentMarkSweep.CollectionCount"
+    - "java.lang:type=GarbageCollector,name=ParNew/CollectionTime|Java.GarbageCollector.ParNew.CollectionTime"
+    - "java.lang:type=GarbageCollector,name=ParNew/CollectionCount|Java.GarbageCollector.ParNew.CollectionCount"
+  tags:
+    tag1: tag1val
+    tag2: tag2val
+    source: cassandra1

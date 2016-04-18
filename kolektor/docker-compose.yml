@@ -1,0 +1,9 @@
+statsdtest:
+  container_name: gostatstest
+  hostname: gostatstest
+  ports:
+    - "10001:10001/udp"
+  volumes:
+    - /Users/evanpease/work:/opt/go
+  image: ubuntu:latest
+  command: /bin/sh -c "while true; do /bin/echo 'hello'; sleep 100; done;"
