@@ -1,6 +1,6 @@
 statsdtest:
-  container_name: gostatstest
-  hostname: gostatstest
+  container_name: kolektor
+  hostname: kolektor
   ports:
     - "10001:10001/udp"
   volumes:

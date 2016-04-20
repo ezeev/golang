@@ -63,14 +63,6 @@ func (b *WavefrontBackend) Flush(metrics []Metric) {
     }
     fmt.Fprintf(conn, fmt.Sprintf("%s %v %v %s \n", metricName,value,ts,tagStr))
   }
-
-  //fmt.Println(metrics)
-  /*
-  if (b.PrintStats) {
-    fmt.Println("Printing Metric Data:")
-    fmt.Println(metrics)
-  }
-  */
   //close connection
   conn.Close()
 
