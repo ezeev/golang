@@ -11,7 +11,7 @@ import (
 	"github.com/golang/glog"
 )
 
-//Stat struct
+//Stat  blah
 type Stat struct {
 	key       string
 	statType  string
@@ -143,6 +143,7 @@ func (s *StatListener) ListenForStats(port string) {
 		glog.Fatalf("Error resolving UDP Address: %s", err)
 	}
 	Conn, err := net.ListenUDP("udp", ServerAddr)
+	defer Conn.Close()
 	if err != nil {
 		glog.Fatalf("Error listening on UDP: %s", err)
 	}
@@ -165,6 +166,4 @@ func (s *StatListener) ListenForStats(port string) {
 			fmt.Println("Error: ", err, "from ", addr)
 		}
 	}
-	defer Conn.Close()
-
 }

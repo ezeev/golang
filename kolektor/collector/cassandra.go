@@ -10,15 +10,13 @@ import (
 	"github.com/ezeev/golang/kolektor/output"
 )
 
+// CassandraCollector Struct for the apache Cassandra collector. The Cassandra collector depends on golokia
 type CassandraCollector struct {
-	//Host string
-	//Interval float64
 	LastCollection time.Time
-	//Metrics []string
-	//Tags map[string]string
-	Config CassandraConfig
+	Config         CassandraConfig
 }
 
+//CassandraConfig this is some config
 type CassandraConfig struct {
 	Collector string
 	Host      string
@@ -27,37 +25,37 @@ type CassandraConfig struct {
 	Tags      map[string]string
 }
 
+// NewCassandraCollector new CassandraCollector
 func NewCassandraCollector(config CassandraConfig) (*CassandraCollector, error) {
-	/*c := &CassandraCollector{
-	  Host: config.Host,
-	  Interval: config.Interval,
-	  Metrics: config.Metrics,
-	  Tags: config.Tags,
-	}*/
 	c := &CassandraCollector{Config: config}
 	return c, nil
 }
 
-func (c *CassandraCollector) GetInterval() float64 {
+// Interval get interval o
+func (c *CassandraCollector) Interval() float64 {
 	return c.Config.Interval
 }
 
+// Name Returns the name of the collector
 func (c *CassandraCollector) Name() string {
 	return c.Config.Collector
 }
 
+// SetLastCollectionTime Sets the last collection time of the current collector
 func (c *CassandraCollector) SetLastCollectionTime(t time.Time) {
 	c.LastCollection = t
 }
 
-func (c *CassandraCollector) GetLastCollectionTime() time.Time {
+// LastCollectionTime Returns the last collection time of the last collector
+func (c *CassandraCollector) LastCollectionTime() time.Time {
 	return c.LastCollection
 }
 
+// Collect Collects metrics from Cassandra and returns a slice of Metrics
 func (c *CassandraCollector) Collect() ([]output.Metric, error) {
 	//url := "http://localhost:8778"
 	url := c.Config.Host + "/jolokia/read/"
-	metrics := make([]output.Metric, 0)
+	var metrics []output.Metric
 	timestamp := time.Now().Unix()
 
 	for _, v := range c.Config.Metrics {

@@ -19,32 +19,34 @@ type CollectorConfig struct {
 type Collector interface {
 	Name() string
 	Collect() ([]output.Metric, error)
-	GetInterval() float64
+	Interval() float64
 	SetLastCollectionTime(time.Time)
-	GetLastCollectionTime() time.Time
+	LastCollectionTime() time.Time
 }
 
-//NewCollector new collector
+//NewCollector Creates an instance of a collector based on the yaml config.
 func NewCollector(strYaml string) (Collector, error) {
 
 	genericConfig := CollectorConfig{}
 	err := yaml.Unmarshal([]byte(strYaml), &genericConfig)
+	if err != nil {
+		return nil, err
+	}
 
 	if genericConfig.Collector == "cassandra" {
 		cassConfig := CassandraConfig{}
-		err := yaml.Unmarshal([]byte(strYaml), &cassConfig)
-		if err != nil {
-			panic(err)
+		err2 := yaml.Unmarshal([]byte(strYaml), &cassConfig)
+		if err2 != nil {
+			return nil, err2
 		}
 		return NewCassandraCollector(cassConfig)
 	}
 
 	fmt.Println(genericConfig.Collector)
-
 	return nil, err
 }
 
-//CollectAndFlush
+// CollectAndFlush Executes the collector and sends the returned metrics to the backend
 func CollectAndFlush(collector Collector, be output.Backend) {
 	metrics, err := collector.Collect()
 	if err != nil {
@@ -54,7 +56,7 @@ func CollectAndFlush(collector Collector, be output.Backend) {
 	}
 }
 
-//RunCollectors run the collectors
+//RunCollectors Runs each collector. Loads the collectors and iterates through each one until the process is cancelled.
 func RunCollectors(pathToYamlFiles string, config kolektor.Configuration) {
 
 	//load YAML files
@@ -67,6 +69,7 @@ func RunCollectors(pathToYamlFiles string, config kolektor.Configuration) {
 	for _, f := range files {
 		buf, err := ioutil.ReadFile(pathToYamlFiles + "/" + f.Name())
 		if err != nil {
+			fmt.Println("Unable to read collector Yaml:", err)
 			panic(err)
 		}
 		yamlstr := string(buf)
@@ -90,9 +93,9 @@ func RunCollectors(pathToYamlFiles string, config kolektor.Configuration) {
 		for _, collector := range collectors { //loop through the collectors forever
 			if collector != nil {
 				t := time.Now()
-				d := t.Sub(collector.GetLastCollectionTime()) //get duration since last flush
+				d := t.Sub(collector.LastCollectionTime()) //get duration since last flush
 				//fmt.Println(d.Seconds())
-				if d.Seconds() >= collector.GetInterval() { //is it time to collect?
+				if d.Seconds() >= collector.Interval() { //is it time to collect?
 					now := time.Now()
 					go CollectAndFlush(collector, be)
 					collector.SetLastCollectionTime(now)
