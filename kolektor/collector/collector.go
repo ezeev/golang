@@ -64,9 +64,19 @@ func RunCollectors(pathToYamlFiles string, config kolektor.Configuration) {
 	if ferr != nil {
 		fmt.Println(ferr)
 	}
+	//are there any collectors?
+	if len(files) == 0 {
+		fmt.Println("YAML directory is empty!")
+	}
+
 	//load collectors
 	collectors := make([]Collector, len(files)) //hole the collectors in a slice
 	for _, f := range files {
+		//omit directories
+		if f.IsDir() {
+			continue
+		}
+
 		buf, err := ioutil.ReadFile(pathToYamlFiles + "/" + f.Name())
 		if err != nil {
 			fmt.Println("Unable to read collector Yaml:", err)
@@ -82,6 +92,11 @@ func RunCollectors(pathToYamlFiles string, config kolektor.Configuration) {
 	}
 	//end collector loading
 
+	//how many collectors were loaded?
+	if len(collectors) <= 0 {
+		fmt.Println("No collectors loaded!")
+	}
+
 	//create backend
 	be, err := output.NewBackend(config.Backend, config.BackendArgs)
 	if err != nil {
@@ -90,7 +105,7 @@ func RunCollectors(pathToYamlFiles string, config kolektor.Configuration) {
 
 	//time and loop collectors
 	for {
-		for _, collector := range collectors { //loop through the collectors forever
+		for i, collector := range collectors { //loop through the collectors forever
 			if collector != nil {
 				t := time.Now()
 				d := t.Sub(collector.LastCollectionTime()) //get duration since last flush
@@ -99,6 +114,10 @@ func RunCollectors(pathToYamlFiles string, config kolektor.Configuration) {
 					now := time.Now()
 					go CollectAndFlush(collector, be)
 					collector.SetLastCollectionTime(now)
+				}
+				//There's no need to loop through the collectors more than once per second.
+				if i == len(collectors)-1 {
+					time.Sleep(900 * time.Millisecond)
 				}
 			}
 		}

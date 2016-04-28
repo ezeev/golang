@@ -19,10 +19,12 @@ type Stat struct {
 	increment bool
 }
 
+//NewStat Returns new stat
 func NewStat() *Stat {
 	return &Stat{}
 }
 
+//ParseStat Parses a string into a Stat struct
 func ParseStat(input string) *Stat {
 	S := NewStat()
 	str := strings.Split(input, "|")
@@ -40,7 +42,7 @@ func ParseStat(input string) *Stat {
 
 }
 
-//StatCollector struct
+//StatListener Struct that holds stats information
 type StatListener struct {
 	gauges    map[string]float64
 	counters  map[string]float64
@@ -48,6 +50,7 @@ type StatListener struct {
 	lastFlush time.Time
 }
 
+//NewStatListener Returns an instance of a StatListener
 func NewStatListener() *StatListener {
 	return &StatListener{
 		gauges:   make(map[string]float64),
@@ -56,6 +59,7 @@ func NewStatListener() *StatListener {
 	}
 }
 
+//FlushStats Starts flushes metrics from the StatListener into the backend
 func (s *StatListener) FlushStats(flushInterval float64, be output.Backend) {
 
 	//start timer
@@ -74,7 +78,7 @@ func (s *StatListener) FlushStats(flushInterval float64, be output.Backend) {
 		fmt.Println("Flushing stats, last flush was at ", s.lastFlush)
 
 		stats := make(map[string]float64)
-		stats2 := make([]output.Metric, 0)
+		var stats2 []output.Metric
 
 		//timers
 		var key string
@@ -112,27 +116,24 @@ func (s *StatListener) FlushStats(flushInterval float64, be output.Backend) {
 	}
 }
 
+//AddGauge Adds a gauge stat to the StatListener
 func (s *StatListener) AddGauge(stat *Stat) {
 	s.gauges[stat.key] = stat.value
 }
+
+//IncrementGauge Increments a gauge in a StatListener
 func (s *StatListener) IncrementGauge(stat *Stat) {
 	s.gauges[stat.key] += stat.value
 }
+
+//AddCounter Adds a counter stat to the StatListener
 func (s *StatListener) AddCounter(stat *Stat) {
 	s.counters[stat.key] += stat.value
 }
+
+//AddTimer Adds a timer stat to the StatListener
 func (s *StatListener) AddTimer(stat *Stat) {
 	s.timers[stat.key] = append(s.timers[stat.key], stat.value)
-}
-
-//Lock comments
-func (s *StatListener) Lock() {
-
-}
-
-//UnLock This is some text
-func (s *StatListener) UnLock() {
-
 }
 
 //ListenForStats listens for stats
