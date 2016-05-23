@@ -1,7 +1,10 @@
 package twitterDBI
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/dghubble/go-twitter/twitter"
 	r "gopkg.in/dancannon/gorethink.v2"
@@ -51,8 +54,59 @@ func (rt *RethinkDB) CreateTweetsTable() error {
 
 // SaveTweet Saves a tweet to RethinkDB
 func (rt *RethinkDB) SaveTweet(tweet twitter.Tweet) error {
-	err := r.DB("twitter").Table("tweets").Insert(tweet).Exec(rt.session)
+
+	tweetItem := TweetItem{
+		Id:      tweet.IDStr,
+		Text:    tweet.Text,
+		Created: time.Now(),
+		UserId:  tweet.User.ScreenName,
+	}
+	err := r.DB("twitter").Table("tweets").Insert(tweetItem).Exec(rt.session)
 	return err
+}
+
+// GetTweets returns tweets
+func (rt *RethinkDB) GetTweets() []TweetItem {
+	tweets := []TweetItem{}
+	res, err := r.DB("twitter").Table("tweets").Run(rt.session)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = res.All(&tweets)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(tweets)
+	return tweets
+}
+
+func (rt *RethinkDB) ReceiveTweets(ch chan TweetItem) {
+	for v := range ch {
+		fmt.Println(v)
+	}
+
+}
+
+func (rt *RethinkDB) StreamTweets(ch chan TweetItem) {
+	res, err := r.DB("twitter").Table("tweets").Changes().Run(rt.session)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var value interface{}
+	for res.Next(&value) {
+		mapval := value.(map[string]interface{})
+		if mapval["new_val"] != nil && mapval["old_val"] == nil {
+			jsonbytes, err := json.Marshal(mapval["new_val"])
+			if err != nil {
+				log.Fatal(err)
+			}
+			tweet := TweetItem{}
+			if err := json.Unmarshal(jsonbytes, &tweet); err != nil {
+				log.Fatal(err)
+			}
+			ch <- tweet
+		}
+	}
 }
 
 // Close closes the rethinkdb session

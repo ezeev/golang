@@ -1,6 +1,10 @@
 package twitterDBI
 
-import "github.com/dghubble/go-twitter/twitter"
+import (
+	"time"
+
+	"github.com/dghubble/go-twitter/twitter"
+)
 
 // TwitterDBI Interface for database access
 type TwitterDBI interface {
@@ -9,6 +13,17 @@ type TwitterDBI interface {
 	CreateTweetsTable() error
 	CreateTwitterDatabase() error
 	SaveTweet(twitter.Tweet) error
+	GetTweets() []TweetItem
+	StreamTweets(chan TweetItem)
+	ReceiveTweets(chan TweetItem)
+}
+
+// Model representing a tweet
+type TweetItem struct {
+	Id      string `gorethink:"id,omitempty"`
+	Text    string
+	Created time.Time
+	UserId  string
 }
 
 // NewDBI Returns a new instance of a DBI

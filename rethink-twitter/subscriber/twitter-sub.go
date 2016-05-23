@@ -39,6 +39,13 @@ func main() {
 	db.Connect(*connStr)
 	db.CreateTwitterDatabase()
 	db.CreateTweetsTable()
+
+	//testing
+	ch := make(chan twitterDBI.TweetItem)
+	go db.StreamTweets(ch)
+	go db.ReceiveTweets(ch)
+	//fmt.Println(tweets)
+
 	//nc, _ := nats.Connect(nats.DefaultURL)
 	subj := "tweets"
 	//nc.Subscribe(subj, func(msg *nats.Msg) {
