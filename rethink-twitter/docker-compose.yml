@@ -1,0 +1,17 @@
+
+
+version: "2"
+
+services:
+  nats-main:
+    container_name: nats-main
+    hostname: nats-main
+    image: nats
+    ports:
+      - "8222:8222"
+      - "4222:4222"
+      - "6222:6222"
+    expose:
+      - "8222"
+      - "4222"
+      - "6222"
