@@ -15,7 +15,6 @@ type TwitterDBI interface {
 	SaveTweet(twitter.Tweet) error
 	GetTweets() []TweetItem
 	StreamTweets(chan TweetItem)
-	ReceiveTweets(chan TweetItem)
 }
 
 // Model representing a tweet

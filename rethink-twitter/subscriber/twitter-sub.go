@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -14,6 +15,13 @@ import (
 
 var session *r.Session
 
+func printTweets(ch chan twitterDBI.TweetItem) {
+	for v := range ch {
+		fmt.Println(v)
+	}
+
+}
+
 func main() {
 
 	flags := flag.NewFlagSet("user-auth", flag.ExitOnError)
@@ -21,7 +29,6 @@ func main() {
 	dbType := flags.String("db-type", "", "The DBMS where tweets will be saved")
 	connStr := flags.String("conn-str", "", "The DBMS connection string")
 	flags.Parse(os.Args[1:])
-
 	if *natsUrls == "" {
 		log.Fatal("natsUrls required")
 	}
@@ -43,7 +50,8 @@ func main() {
 	//testing
 	ch := make(chan twitterDBI.TweetItem)
 	go db.StreamTweets(ch)
-	go db.ReceiveTweets(ch)
+	//go db.ReceiveTweets(ch)
+	go printTweets(ch)
 	//fmt.Println(tweets)
 
 	//nc, _ := nats.Connect(nats.DefaultURL)
@@ -51,6 +59,7 @@ func main() {
 	//nc.Subscribe(subj, func(msg *nats.Msg) {
 	c.Subscribe(subj, func(tweet *twitter.Tweet) {
 		err := db.SaveTweet(*tweet)
+		//bytesGauge.Update(syscall.Getrusage())
 		if err != nil {
 			log.Println(err)
 		}

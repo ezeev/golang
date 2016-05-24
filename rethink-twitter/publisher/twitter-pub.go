@@ -16,7 +16,6 @@ import (
 )
 
 func main() {
-	fmt.Println("first test")
 
 	flags := flag.NewFlagSet("user-auth", flag.ExitOnError)
 	consumerKey := flags.String("consumer-key", "", "Twitter Consumer Key")

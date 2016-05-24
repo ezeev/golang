@@ -80,13 +80,7 @@ func (rt *RethinkDB) GetTweets() []TweetItem {
 	return tweets
 }
 
-func (rt *RethinkDB) ReceiveTweets(ch chan TweetItem) {
-	for v := range ch {
-		fmt.Println(v)
-	}
-
-}
-
+// StreamTweets streams any new records in the Tweets table to a channel
 func (rt *RethinkDB) StreamTweets(ch chan TweetItem) {
 	res, err := r.DB("twitter").Table("tweets").Changes().Run(rt.session)
 	if err != nil {
