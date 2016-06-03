@@ -9,9 +9,14 @@ window.addEventListener("load", function(evt) {
     var print = function(message) {
         var d = document.createElement("div");
         d.innerHTML = message;
-        output.appendChild(d);
+        //output.appendChild(d);
+        var len = output.childNodes.length;
+        if (len > 10) {
+          output.removeChild(output.childNodes[10]);
+        }
+        output.insertBefore(d,output.childNodes[0]);
     };
-  
+
     document.getElementById("open").onclick = function(evt) {
         if (ws) {
             return false;
