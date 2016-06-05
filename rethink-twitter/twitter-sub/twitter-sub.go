@@ -8,14 +8,14 @@ import (
 	"runtime"
 
 	"github.com/dghubble/go-twitter/twitter"
-	"github.com/ezeev/golang/rethink-twitter/twitter-dbi"
+	"github.com/ezeev/golang/rethink-twitter/dbi"
 	"github.com/nats-io/nats"
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
 var session *r.Session
 
-func printTweets(ch chan twitterDBI.TweetItem) {
+func printTweets(ch chan traderDB.TweetItem) {
 	for v := range ch {
 		fmt.Println(v)
 	}
@@ -42,13 +42,13 @@ func main() {
 	nc, _ := nats.Connect(*natsUrls)
 	c, _ := nats.NewEncodedConn(nc, nats.JSON_ENCODER)
 
-	db := twitterDBI.NewDBI(*dbType)
+	db := traderDB.NewDBI(*dbType)
 	db.Connect(*connStr)
 	db.CreateTwitterDatabase()
 	db.CreateTweetsTable()
 
 	//testing
-	ch := make(chan twitterDBI.TweetItem)
+	ch := make(chan traderDB.TweetItem)
 	go db.StreamTweets(ch)
 	//go db.ReceiveTweets(ch)
 	go printTweets(ch)

@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ezeev/golang/rethink-twitter/twitter-dbi"
+	"github.com/ezeev/golang/rethink-twitter/dbi"
 	"github.com/gorilla/websocket"
 )
 
@@ -22,10 +22,10 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
-	db := twitterDBI.NewDBI("rethinkdb")
+	db := traderDB.NewDBI("rethinkdb")
 	db.Connect("localhost:28015")
 
-	ch := make(chan twitterDBI.TweetItem)
+	ch := make(chan traderDB.TweetItem)
 	go db.StreamTweets(ch)
 
 	for {

@@ -1,4 +1,4 @@
-package twitterDBI
+package traderDB
 
 import (
 	"encoding/json"
