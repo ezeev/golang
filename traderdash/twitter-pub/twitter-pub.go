@@ -8,14 +8,22 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/coreos/pkg/flagutil"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"github.com/nats-io/nats"
+	"github.com/rcrowley/go-metrics"
 )
 
+var tweetCount metrics.Counter
+
 func main() {
+
+	tweetCount = metrics.NewCounter()
+	metrics.Register("tweetCount", tweetCount)
+	go metrics.Log(metrics.DefaultRegistry, 10*time.Second, log.New(os.Stderr, "twitter-pub metrics: ", log.Lmicroseconds))
 
 	flags := flag.NewFlagSet("user-auth", flag.ExitOnError)
 	consumerKey := flags.String("consumer-key", "", "Twitter Consumer Key")
@@ -51,10 +59,11 @@ func main() {
 		//nc.Publish(subj, []byte(tweet.Text))
 		c.Publish(subj, tweet)
 		nc.Flush()
-		fmt.Println(tweet.Text)
+		tweetCount.Inc(1)
+		//fmt.Println(tweet.Text)
 	}
 
-	fmt.Println("Starting Stream...")
+	log.Println("Starting Stream...")
 
 	// FILTER
 	arrTracks := strings.Split(*tracks, ",")

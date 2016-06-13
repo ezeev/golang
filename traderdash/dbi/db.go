@@ -6,7 +6,9 @@ import (
 	"github.com/dghubble/go-twitter/twitter"
 )
 
-// TwitterDBI Interface for database access
+// DB Interface for database access
+const dbName = "trader"
+
 type DB interface {
 	Connect(string) error
 	Close()
@@ -19,14 +21,17 @@ type DB interface {
 	StreamTweets(chan TweetItem)
 
 	//Quotes
+	CreateQuotesTable() error
+	SaveQuote(QuoteItem) error
 }
 
 // QuoteItem model representing a stock quote
 type QuoteItem struct {
-	Id        string
+	//Id        string
 	Symbol    string
 	Price     float64
-	Timestamp time.Time
+	Volume    int64
+	Timestamp int64
 }
 
 // TweetItem model representing a tweet

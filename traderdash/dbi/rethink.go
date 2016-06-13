@@ -32,22 +32,33 @@ func (rt *RethinkDB) Connect(connString string) error {
 
 // CreateTwitterDatabase creates twitter database in rethinkdb
 func (rt *RethinkDB) CreateTwitterDatabase() error {
-	_, err := r.DBCreate("twitter").RunWrite(rt.session)
+	_, err := r.DBCreate(dbName).RunWrite(rt.session)
 	if err != nil {
-		log.Print("Unable to create database. Database twitter probably already exists.")
+		log.Print("Unable to create database. Database " + dbName + " probably already exists.")
 	} else {
-		log.Print("Created database twitter.")
+		log.Print("Created database " + dbName + ".")
 	}
 	return err
 }
 
 // CreateTweetsTable creates tweets table in rethinkdb
 func (rt *RethinkDB) CreateTweetsTable() error {
-	_, err := r.DB("twitter").TableCreate("tweets").RunWrite(rt.session)
+	_, err := r.DB(dbName).TableCreate("tweets").RunWrite(rt.session)
 	if err != nil {
-		log.Print("Unable to create table. Table twitter.tweets probably already exists.")
+		log.Print("Unable to create table. Table " + dbName + ".tweets probably already exists.")
 	} else {
-		log.Print("Created table twitter.tweets")
+		log.Print("Created table " + dbName + ".tweets")
+	}
+	return err
+}
+
+// CreateQuotesTable creates quotes table in rethinkdb
+func (rt *RethinkDB) CreateQuotesTable() error {
+	_, err := r.DB(dbName).TableCreate("quotes").RunWrite(rt.session)
+	if err != nil {
+		log.Print("Unable to create table. Table " + dbName + ".quotes probably already exists.")
+	} else {
+		log.Print("Created table " + dbName + ".quotes")
 	}
 	return err
 }
@@ -61,14 +72,26 @@ func (rt *RethinkDB) SaveTweet(tweet twitter.Tweet) error {
 		Created: time.Now(),
 		UserId:  tweet.User.ScreenName,
 	}
-	err := r.DB("twitter").Table("tweets").Insert(tweetItem).Exec(rt.session)
+	//err := r.DB("twitter").Table("tweets").Insert(tweetItem).Exec(rt.session)
+	err := rt.saveItem("tweets", tweetItem)
+	return err
+}
+
+//SaveQuote saves a stock pricing quote to rethinkdb
+func (rt *RethinkDB) SaveQuote(quote QuoteItem) error {
+	err := rt.saveItem("quotes", quote)
+	return err
+}
+
+func (rt *RethinkDB) saveItem(tableName string, data interface{}) error {
+	err := r.DB(dbName).Table(tableName).Insert(data).Exec(rt.session)
 	return err
 }
 
 // GetTweets returns tweets
 func (rt *RethinkDB) GetTweets() []TweetItem {
 	tweets := []TweetItem{}
-	res, err := r.DB("twitter").Table("tweets").Run(rt.session)
+	res, err := r.DB(dbName).Table("tweets").Run(rt.session)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,7 +105,7 @@ func (rt *RethinkDB) GetTweets() []TweetItem {
 
 // StreamTweets streams any new records in the Tweets table to a channel
 func (rt *RethinkDB) StreamTweets(ch chan TweetItem) {
-	res, err := r.DB("twitter").Table("tweets").Changes().Run(rt.session)
+	res, err := r.DB(dbName).Table("tweets").Changes().Run(rt.session)
 	if err != nil {
 		log.Fatal(err)
 	}

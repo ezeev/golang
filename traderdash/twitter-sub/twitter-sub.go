@@ -2,27 +2,36 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/dghubble/go-twitter/twitter"
-	"github.com/ezeev/golang/rethink-twitter/dbi"
+	"github.com/ezeev/golang/traderdash/dbi"
 	"github.com/nats-io/nats"
+	"github.com/rcrowley/go-metrics"
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
 var session *r.Session
 
+var tweetCount metrics.Counter
+
+/*
 func printTweets(ch chan traderDB.TweetItem) {
-	for v := range ch {
+	for range ch {
 		fmt.Println(v)
 	}
 
 }
+*/
 
 func main() {
+
+	tweetCount = metrics.NewCounter()
+	metrics.Register("tweetCount", tweetCount)
+	go metrics.Log(metrics.DefaultRegistry, 10*time.Second, log.New(os.Stderr, "twitter-sub metrics: ", log.Lmicroseconds))
 
 	flags := flag.NewFlagSet("user-auth", flag.ExitOnError)
 	natsUrls := flags.String("nats-urls", "", "Comma separated list of nats message queue servers")
@@ -48,10 +57,10 @@ func main() {
 	db.CreateTweetsTable()
 
 	//testing
-	ch := make(chan traderDB.TweetItem)
-	go db.StreamTweets(ch)
+	//ch := make(chan traderDB.TweetItem)
+	//go db.StreamTweets(ch)
 	//go db.ReceiveTweets(ch)
-	go printTweets(ch)
+	//go printTweets(ch)
 	//fmt.Println(tweets)
 
 	//nc, _ := nats.Connect(nats.DefaultURL)
@@ -59,6 +68,7 @@ func main() {
 	//nc.Subscribe(subj, func(msg *nats.Msg) {
 	c.Subscribe(subj, func(tweet *twitter.Tweet) {
 		err := db.SaveTweet(*tweet)
+		tweetCount.Inc(1)
 		//bytesGauge.Update(syscall.Getrusage())
 		if err != nil {
 			log.Println(err)

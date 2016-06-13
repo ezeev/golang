@@ -3,14 +3,17 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/coreos/pkg/flagutil"
+	"github.com/ezeev/golang/traderdash/dbi"
 )
+
+var db traderDB.DB
 
 type QuoteResponse struct {
 	List struct {
@@ -43,7 +46,35 @@ func saveQuotes(symbols string) {
 		log.Fatal(err)
 	}
 	//fmt.Println(respData.List.Meta)
-	fmt.Println(respData.List.Resources[0].Resource.Fields["symbol"])
+	/*
+		type QuoteItem struct {
+			Id        string
+			Symbol    string
+			Price     float64
+			Volume	  int64
+			Timestamp int64
+		}
+	*/
+	for v := range respData.List.Resources {
+		q := respData.List.Resources[v].Resource.Fields
+		symbol := q["symbol"]
+		price, _ := strconv.ParseFloat(q["price"], 64)
+		volume, _ := strconv.ParseInt(q["volume"], 20, 64)
+		timestamp, _ := strconv.ParseInt(q["ts"], 10, 64)
+		//id := symbol + string(timestamp)
+
+		item := traderDB.QuoteItem{
+			Symbol:    symbol,
+			Price:     price,
+			Volume:    volume,
+			Timestamp: timestamp,
+		}
+
+		err := db.SaveQuote(item)
+		if err != nil {
+			log.Fatalf("Error saving quote, error: %s", err)
+		}
+	}
 }
 
 func main() {
@@ -51,13 +82,20 @@ func main() {
 	flags := flag.NewFlagSet("finance", flag.ExitOnError)
 	symbols := flags.String("symbols", "", "Comma separated list of symbols")
 	interval := flags.Int("interval", 10, "Interval to poll finance API")
-	natsUrls := flags.String("nats-urls", "", "Comma separated list of nats message queue servers")
+	dbType := flags.String("db-type", "", "Database type to use")
+	connStr := flags.String("conn-str", "", "Connection string to database")
 	flags.Parse(os.Args[1:])
-	flagutil.SetFlagsFromEnv(flags, "TWITTER")
+	flagutil.SetFlagsFromEnv(flags, "FINANCE")
 
-	if *symbols == "" || *natsUrls == "" {
+	if *symbols == "" || *dbType == "" {
 		log.Fatal("Symbols required")
 	}
+
+	db = traderDB.NewDBI(*dbType)
+	db.Connect(*connStr)
+	defer db.Close()
+
+	db.CreateQuotesTable()
 
 	//Finance API URL - http://finance.yahoo.com/webservice/v1/symbols/YHOO,AAPL/quote?format=json&view=detail
 
